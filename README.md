@@ -4,11 +4,19 @@ Play Battleship in the browser against three different AI opponents and watch ho
 
 | Opponent | How it plays | Shots to win (10×10, lower is better) |
 |---|---|---|
-| **Random** | Fires at a random unexplored cell | __RANDOM__ |
-| **MCTS** | Information Set Monte Carlo Tree Search over sampled hidden fleets | __MCTS__ |
-| **Deep CNN** | Residual CNN trained on self-play to predict where ships are | __NEURAL__ |
+| **Random** | Fires at a random unexplored cell | 95.2 |
+| **MCTS** | Information Set Monte Carlo Tree Search over sampled hidden fleets | 47.8 |
+| **Deep CNN** | Residual CNN trained on self-play to predict where ships are | **44.6** |
+
+The results come from 200 identical random boards per agent (`python -m battleship_ai evaluate`). Head to head, the CNN beats MCTS in 64% of games, and both beat Random in every game.
 
 The UI shows the **AI's mind** live. After each enemy shot, a heatmap on your own board shows where the AI thinks your ships are (CNN), or where it spent its simulations (MCTS).
+
+![Battle against MCTS with the AI-vision heatmap](docs/battle.png)
+
+| Fleet setup | AI duel | Lab |
+|---|---|---|
+| ![setup](docs/setup.png) | ![duel](docs/duel.png) | ![lab](docs/lab.png) |
 
 ## Quick start
 
@@ -54,9 +62,9 @@ Battleship hides information, so a normal game tree is not available. The agent 
 
 ### Deep CNN (`nn_model.py`, `train.py`, `agents/neural_agent.py`)
 - **Input** (10 planes): one-hot unknown / miss / hit / sunk, a plane of ones (with zero padding, this marks the board edge), and one plane per fleet ship that tells if it is still afloat.
-- **Network**: a fully convolutional ResNet, with a 3×3 stem and 5 residual blocks of 48 channels (about 215k parameters). Because it has no dense layers, one network plays every board size from 8×8 to 12×12.
+- **Network**: a fully convolutional ResNet, with a 3×3 stem and 5 residual blocks of 48 channels (about 212k parameters). Because it has no dense layers, one network plays every board size from 8×8 to 12×12.
 - **Output**: a ship probability for every cell. The agent fires at the most likely unexplored cell.
-- **Training**: supervised occupancy prediction on self-play positions, with masked binary cross-entropy against the true hidden layout. Round 0 learns from random play. Each later round lets the current network play (with 10 % random exploration), and it learns from the positions its own policy reaches (DAgger-style). Hundreds of games run in parallel as numpy arrays. Random flips and transposes add data. Training took __TRAIN_MIN__ minutes on a 4-core CPU.
+- **Training**: supervised occupancy prediction on self-play positions, with masked binary cross-entropy against the true hidden layout. Round 0 learns from random play. Each later round lets the current network play (with 10 % random exploration), and it learns from the positions its own policy reaches (DAgger-style). Hundreds of games run in parallel as numpy arrays. Random flips and transposes add data. Training took 35 minutes on a 4-core CPU.
 - **Inference**: weights are exported to `.npz` (float16). They run through a numpy forward pass (`im2col` + matmul) in a few milliseconds per move. Training checks that the numpy output matches PyTorch.
 
 ## Project layout

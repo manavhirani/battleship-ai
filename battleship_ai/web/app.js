@@ -737,7 +737,9 @@ const Lab = {
     const hist = t.history;
     const params = t.channels ? `${t.blocks} residual blocks × ${t.channels} channels` : "";
     $("#lab-train-note").textContent = `Greedy shots-to-win on 10×10 after each self-play round (${params}, ${Math.round((t.train_seconds || 0) / 60)} min on CPU). Dashed lines: the other agents.`;
-    const ref = App.meta.agents.filter((a) => a.benchmark && a.key !== "neural");
+    // reference lines only when they are near the curve, so the curve keeps its detail
+    const top = Math.max(...hist.map((r) => r.shots_10x10));
+    const ref = App.meta.agents.filter((a) => a.benchmark && a.key !== "neural" && a.benchmark.mean < top + 15);
     const vals = [...hist.map((r) => r.shots_10x10), ...ref.map((a) => a.benchmark.mean)];
     const W = 560, H = 230, P = { l: 34, r: 70, t: 12, b: 30 };
     const lo = Math.floor(Math.min(...vals) / 5) * 5 - 2, hi = Math.ceil(Math.max(...vals) / 5) * 5 + 2;

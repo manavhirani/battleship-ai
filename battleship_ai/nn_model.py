@@ -76,7 +76,7 @@ class NumpyCNN:
 
     def probabilities(self, grids: np.ndarray, alive: np.ndarray) -> np.ndarray:
         z = self.logits(encode(grids, alive))
-        return 1.0 / (1.0 + np.exp(-z))
+        return 0.5 * (1.0 + np.tanh(0.5 * z))  # sigmoid without exp overflow
 
 
 _cached: Optional[NumpyCNN] = None
